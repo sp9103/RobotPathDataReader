@@ -107,6 +107,7 @@ int main(){
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, procDir, strlen(procDir), szProcDir, MAX_PATH);
 			hDataFind = FindFirstFile(szProcDir, &class_ffd);
 			int rgbCount = 0;
+			int angCount = 0;
 			while (FindNextFile(hDataFind, &class_ffd) != 0){
 				//1. trajectory load
 				char rgbFileName[256];
@@ -116,6 +117,23 @@ int main(){
 				if (rgbFileName[0] == '.')
 					continue;
 				rgbCount++;
+			}
+			strcpy(procDir, tBuf);
+			strcat(procDir, "\\ANGLE\\*");
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, procDir, strlen(procDir), szProcDir, MAX_PATH);
+			hDataFind = FindFirstFile(szProcDir, &class_ffd);
+			while (FindNextFile(hDataFind, &class_ffd) != 0){
+				//1. trajectory load
+				char rgbFileName[256];
+				size_t Anglen;
+				StringCchLength(class_ffd.cFileName, MAX_PATH, &Anglen);
+				WideCharToMultiByte(CP_ACP, 0, class_ffd.cFileName, 256, rgbFileName, 256, NULL, NULL);
+				if (rgbFileName[0] == '.')
+					continue;
+				angCount++;
+			}
+			if(angCount != rgbCount){
+				printf("angle file count != rgb image count\n");
 			}
 			for(int i = 0; i < rgbCount; i++){
 				char AngDir[256];
