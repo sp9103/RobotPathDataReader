@@ -90,6 +90,8 @@ int main(){
 			tracker.InsertBackGround(backRGB, backDepth);
 
 			//경로 읽어들이기
+			armsdk::Pose3D prevPos;
+			memset(&prevPos, 0, sizeof(armsdk::Pose3D));
 			WIN32_FIND_DATA class_ffd;
 			TCHAR szProcDir[MAX_PATH] = { 0, };
 			HANDLE hDataFind = INVALID_HANDLE_VALUE;
@@ -98,7 +100,6 @@ int main(){
 			strcat(procDir, "\\ANGLE\\*");
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, procDir, strlen(procDir), szProcDir, MAX_PATH);
 			hDataFind = FindFirstFile(szProcDir, &class_ffd);
-			float dist = -99999;
 			while (FindNextFile(hDataFind, &class_ffd) != 0){
 				//1. trajectory load
 				char AngFileName[256];
@@ -110,8 +111,29 @@ int main(){
 				FILE *fp = fopen(AngFileName, "r");
 				int Angle[NUM_XEL];
 				if (fp == NULL)		continue;
-				//for(int i = 0; i < NUM_XEL; i++)
+				for(int i = 0; i < NUM_XEL; i++)
+					fscanf(fp, "%d", &Angle[i]);
+				fclose(fp);
+
+				//calc forward kinematics
+				veci angi(6);
+				vecd angd;
+				armsdk::Pose3D endEffector;
+				angi.resize(6);
+				for(int i = 0; i < 6; i++)		angi[i] = Angle[i];
+				angd = kin.Value2Rad(angi);
+				kin.Forward(angd, &endEffector);
+				float distance = sqrt(pow(endEffector.x - prevPos.x, 2) + pow(endEffector.y - prevPos.y, 2) + pow(endEffector.z - prevPos.z, 2));
+				if(distance > 10){							//3cm 이상 차이가 나면 저장
+					robotMotion storeMotion;
+					for(int i = 0; i < NUM_XEL; i++)	storeMotion.motion[i] = Angle[i];
+					tracjectory.push_back(storeMotion);
+					printf("[%d] motion stored.\n", tracjectory.size());
+					prevPos = endEffector;
+				}
 			}
+
+			//구동부
 		}
 	}
 
