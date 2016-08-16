@@ -42,6 +42,7 @@ int main(){
 	ControllerInit(&arm);
 	if(robotConnectCheck(&arm, &robot, &kin))
 		return -1;
+	arm.TorqueOn();
 
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, DEFAULT_READ_PATH, strlen(DEFAULT_READ_PATH), szDir, MAX_PATH);
 	StringCchCat(szDir, MAX_PATH, TEXT("\\*"));
@@ -63,6 +64,12 @@ int main(){
 		if (ccFileName[0] != '.'){
 			//Ω√¿€∫Œ
 			//background store
+			arm.safeReleasePose();
+			cv::Mat backRGB = kinectManager.getImg();
+			cv::Mat backDepth = kinectManager.getDepth();
+			if(backRGB.channels() == 4)	cv::cvtColor(backRGB, backRGB, CV_BGRA2BGR);
+			cv::imshow("background", backRGB);
+			cv::waitKey(1);
 		}
 	}
 
