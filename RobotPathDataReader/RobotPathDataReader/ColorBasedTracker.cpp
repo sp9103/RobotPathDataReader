@@ -158,7 +158,7 @@ cv::Mat ColorBasedTracker::DetectColorMap(cv::Mat rgb, cv::Mat subMap){
 	}
 
 	cv::erode(output, output, cv::Mat(), cv::Point(-1, -1), 2);
-	cv::dilate(output, output, cv::Mat(), cv::Point(-1, -1), 4);
+	cv::dilate(output, output, cv::Mat(), cv::Point(-1, -1), 7);
 	//cv::erode(output, output, cv::Mat(), cv::Point(-1, -1), 3);
 
 	return output;
@@ -244,10 +244,7 @@ cv::Rect ColorBasedTracker::FindHandBlob(std::vector<std::pair<std::vector<cv::P
 			if(blobRect.y <= 0 || blobRect.x <= 0 || (blobRect.x + blobRect.width) >= imgWidth-1 || (blobRect.y + blobRect.height) >= imgHeight-1)	boundaryCount++;
 			else
 				nonBoundBlobIdx.push_back(i);
-			if(minY > blobRect.y){
-				minY = blobRect.y;
-				maxIdx = i;
-			}
+			
 		}
 
 		if(nonBoundBlobIdx.size() == 1)		return src.at(nonBoundBlobIdx.at(0)).second;

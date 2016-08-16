@@ -165,11 +165,13 @@ int main(){
 
 			//±¸µ¿ºÎ
 			arm.safeMovePose(tracjectory.at(0).motion);
+			vector<robotMotion> tempVec;
 			for(int i = 0; i < 3; i++){
 				int motionCount = 0;
 				int dataCount = 0;
 				for(int f = 0; f < 3; f++)	tracjectory.at(motionCount).motion[NUM_JOINT + f] = FinPos[i][f];
 				arm.SetGoalPosition(tracjectory.at(motionCount).motion);
+				tempVec.push_back(tracjectory.at(motionCount));
 				while(1){
 					cv::Mat kinectImg = kinectManager.getImg();
 					cv::Mat KinectDepth = kinectManager.getDepth();
@@ -186,6 +188,7 @@ int main(){
 					if(maxsub < 40){
 						for(int f = 0; f < 3; f++)	tracjectory.at(motionCount+1).motion[NUM_JOINT + f] = FinPos[i][f];
 						arm.SetGoalPosition(tracjectory.at(++motionCount).motion);
+						tempVec.push_back(tracjectory.at(motionCount));
 					}else{
 						if(writeData(kinectImg, KinectDepth, kinectPC, &tracker, presAngle, ccFileName, dataCount, backRGB, backDepth)){
 							printf("[%d] data saved\n", dataCount);
@@ -193,6 +196,10 @@ int main(){
 						}
 					}
 				}
+				tracjectory.clear();
+				for(int j = tempVec.size()-1; j > -1; j--)
+					tracjectory.push_back(tempVec.at(j));
+				tempVec.clear();
 			}
 		}
 	}
