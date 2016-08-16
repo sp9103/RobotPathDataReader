@@ -22,6 +22,8 @@
 
 void ControllerInit(RobotArm *robot);
 bool robotConnectCheck(RobotArm *robot, armsdk::RobotInfo *robotinfo, armsdk::Kinematics *kin);
+void CreateRGBDdir(const char* className);
+void writeDepthData(cv::Mat src, char* path, char* name);
 
 int main(){
 	RobotArm arm;
@@ -43,6 +45,8 @@ int main(){
 	if(robotConnectCheck(&arm, &robot, &kin))
 		return -1;
 	arm.TorqueOn();
+	printf("If kinect loaded, press any key to start.\n");
+	getch();
 
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, DEFAULT_READ_PATH, strlen(DEFAULT_READ_PATH), szDir, MAX_PATH);
 	StringCchCat(szDir, MAX_PATH, TEXT("\\*"));
@@ -63,6 +67,8 @@ int main(){
 		printf("directory : %s load.\n", ccFileName);
 		if (ccFileName[0] != '.'){
 			//시작부
+			ColorBasedTracker tracker;
+			CreateRGBDdir(ccFileName);
 			//background store
 			arm.safeReleasePose();
 			cv::Mat backRGB = kinectManager.getImg();
@@ -70,6 +76,14 @@ int main(){
 			if(backRGB.channels() == 4)	cv::cvtColor(backRGB, backRGB, CV_BGRA2BGR);
 			cv::imshow("background", backRGB);
 			cv::waitKey(1);
+			char buf[256];
+			sprintf(buf, "%s\\%s", DEFAULT_WRITE_PATH, ccFileName);
+			writeDepthData(backDepth, buf, "backDepth");
+			strcat(buf, "\\backRGB.bmp");
+			cv::imwrite(buf, backRGB);
+			tracker.InsertBackGround(backRGB, backDepth);
+
+			//경로 읽어들이기
 		}
 	}
 
@@ -121,4 +135,50 @@ bool robotConnectCheck(RobotArm *robot, armsdk::RobotInfo *robotinfo, armsdk::Ki
 			return false;
 		}
 	}
+}
+
+void CreateRGBDdir(const char* className){
+	TCHAR szDir[MAX_PATH] = {0,};
+	TCHAR RGBDDir[MAX_PATH] = {0,};
+	TCHAR DepthDir[MAX_PATH] = {0,};
+	TCHAR xyzDir[MAX_PATH] = {0,};
+	TCHAR procDepthDir[MAX_PATH] = {0, };
+	char dirpath[256];
+	sprintf(dirpath, "%s\\%s\0", DEFAULT_WRITE_PATH, className);
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, dirpath, strlen(dirpath), szDir, MAX_PATH);
+	bool mkdir_check = CreateDirectory(szDir, NULL);									//루트 디렉토리
+	sprintf(dirpath, "%s\\%s\\RGB\0", DEFAULT_WRITE_PATH, className);
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, dirpath, strlen(dirpath), RGBDDir, MAX_PATH);
+	mkdir_check = CreateDirectory(RGBDDir, NULL);											//컬러 디렉토리 - 원본
+	sprintf(dirpath, "%s\\%s\\ANGLE\0", DEFAULT_WRITE_PATH, className);
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, dirpath, strlen(dirpath), xyzDir, MAX_PATH);
+	mkdir_check = CreateDirectory(xyzDir, NULL);											//Angle
+	sprintf(dirpath, "%s\\%s\\DEPTHMAP\0", DEFAULT_WRITE_PATH, className);
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, dirpath, strlen(dirpath), DepthDir, MAX_PATH);
+	mkdir_check = CreateDirectory(DepthDir, NULL);											//뎁스 디렉토리 - 원본
+	sprintf(dirpath, "%s\\%s\\XYZMAP\0", DEFAULT_WRITE_PATH, className);
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, dirpath, strlen(dirpath), xyzDir, MAX_PATH);
+	mkdir_check = CreateDirectory(xyzDir, NULL);											//포인트 클라우드 디렉토리 - 원본
+	sprintf(dirpath, "%s\\%s\\BACKGROUND\0", DEFAULT_WRITE_PATH, className);
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, dirpath, strlen(dirpath), xyzDir, MAX_PATH);
+	mkdir_check = CreateDirectory(xyzDir, NULL);
+	sprintf(dirpath, "%s\\%s\\PROCESSIMG\0", DEFAULT_WRITE_PATH, className);
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, dirpath, strlen(dirpath), xyzDir, MAX_PATH);
+	mkdir_check = CreateDirectory(xyzDir, NULL);
+	sprintf(dirpath, "%s\\%s\\PROCDEPTH\0", DEFAULT_WRITE_PATH, className);
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, dirpath, strlen(dirpath), procDepthDir, MAX_PATH);
+	mkdir_check = CreateDirectory(procDepthDir, NULL);
+}
+
+void writeDepthData(cv::Mat src, char* path, char* name){
+	//Depth Infomation write
+	char buf[256];
+	sprintf(buf, "%s\\%s.bin", path, name);
+	FILE *fp = fopen(buf, "wb");
+	fwrite(&src.rows, sizeof(int), 1, fp);
+	fwrite(&src.cols, sizeof(int), 1, fp);
+	int Type = src.type();
+	fwrite(&Type, sizeof(int), 1, fp);
+	for(int i = 0; i < src.rows * src.cols; i++)		fwrite(&src.at<float>(i), sizeof(float), 1, fp);
+	fclose(fp);
 }
