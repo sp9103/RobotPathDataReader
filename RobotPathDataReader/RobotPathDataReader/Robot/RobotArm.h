@@ -37,6 +37,7 @@ public:
 	int SetFingerPosition(int *GoalPosition);
 
 	void safeReleasePose();
+	void safeMovePose(int *goal);
 
 	//ARMSDK function
 	int Arm_Get_JointValue(Eigen::VectorXi *value);

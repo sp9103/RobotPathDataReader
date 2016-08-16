@@ -106,11 +106,10 @@ cv::Mat ColorBasedTracker::calcImage(cv::Mat src, cv::Mat depth){
 	//backSub.release();
 
 	//이미지 생성부
-	const int extra = 4;
-	HandBox.x -= extra;
-	HandBox.y -= extra;
-	HandBox.width += extra;
-	HandBox.height += extra;
+	HandBox.x -= PEDDING;
+	HandBox.y -= PEDDING;
+	HandBox.width += PEDDING;
+	HandBox.height += PEDDING;
 	int x_prime = HandBox.x + HandBox.width;
 	int y_prime = HandBox.y + HandBox.height;
 

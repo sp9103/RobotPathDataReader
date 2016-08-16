@@ -255,7 +255,6 @@ SerialPort* RobotArm::DXL_Get_Port(void)
 }
 void RobotArm::safeReleasePose(){
 	int ReleasePose[] = {0,0,0,0,0,0};
-	int stepPose[6];
 	int presPose[6];
 	int goalPose[6];
 
@@ -287,4 +286,21 @@ bool RobotArm::waitMove(){
 	}
 
 	return true;
+}
+
+void RobotArm::safeMovePose(int *goal){
+	int presPose[6];
+
+	jointcontroller_.GetPresPosition(presPose);
+	presPose[0] = goal[0];
+	presPose[2] = goal[2];
+	presPose[4] = goal[4];
+	presPose[5] = goal[5];
+	jointcontroller_.SetGoalPosition(presPose);
+	waitMove();
+	presPose[3] = goal[3];
+	jointcontroller_.SetGoalPosition(presPose);
+	waitMove();
+	jointcontroller_.SetGoalPosition(goal);
+	waitMove();
 }

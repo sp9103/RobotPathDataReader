@@ -4,6 +4,7 @@
 
 #define COLOR_THRESHOLD		10
 #define DEPTH_THRESHOLD		10
+#define PEDDING				4
 
 class ColorBasedTracker
 {

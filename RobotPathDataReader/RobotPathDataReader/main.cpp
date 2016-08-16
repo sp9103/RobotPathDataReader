@@ -24,10 +24,16 @@ typedef struct robotMotion_{
 	int motion[9];
 }robotMotion;
 
+int FinPos[3][3] = {2973, 1097, 1774,
+	2624, 1443, 1966,
+	2533, 1527, 2052};
+
 void ControllerInit(RobotArm *robot);
 bool robotConnectCheck(RobotArm *robot, armsdk::RobotInfo *robotinfo, armsdk::Kinematics *kin);
 void CreateRGBDdir(const char* className);
 void writeDepthData(cv::Mat src, char* path, char* name);
+int calcMaxSubAng(int *target, int *pres);
+bool writeData(cv::Mat RGBimg, cv::Mat DEPTHimg, cv::Mat pointCloud, ColorBasedTracker *cbTracker, int* angle, char* path, const int count, cv::Mat backRGB, cv::Mat backDepth);
 
 int main(){
 	RobotArm arm;
@@ -97,18 +103,24 @@ int main(){
 			HANDLE hDataFind = INVALID_HANDLE_VALUE;
 			char procDir[256];
 			strcpy(procDir, tBuf);
-			strcat(procDir, "\\ANGLE\\*");
+			strcat(procDir, "\\RGB\\*");
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, procDir, strlen(procDir), szProcDir, MAX_PATH);
 			hDataFind = FindFirstFile(szProcDir, &class_ffd);
+			int rgbCount = 0;
 			while (FindNextFile(hDataFind, &class_ffd) != 0){
 				//1. trajectory load
-				char AngFileName[256];
+				char rgbFileName[256];
 				size_t Anglen;
 				StringCchLength(class_ffd.cFileName, MAX_PATH, &Anglen);
-				WideCharToMultiByte(CP_ACP, 0, class_ffd.cFileName, 256, AngFileName, 256, NULL, NULL);
-				if (AngFileName[0] == '.')
+				WideCharToMultiByte(CP_ACP, 0, class_ffd.cFileName, 256, rgbFileName, 256, NULL, NULL);
+				if (rgbFileName[0] == '.')
 					continue;
-				FILE *fp = fopen(AngFileName, "r");
+				rgbCount++;
+			}
+			for(int i = 0; i < rgbCount; i++){
+				char AngDir[256];
+				sprintf(AngDir, "%s\\ANGLE\\%d.txt", tBuf, i);
+				FILE *fp = fopen(AngDir, "r");
 				int Angle[NUM_XEL];
 				if (fp == NULL)		continue;
 				for(int i = 0; i < NUM_XEL; i++)
@@ -134,6 +146,36 @@ int main(){
 			}
 
 			//구동부
+			arm.safeMovePose(tracjectory.at(0).motion);
+			for(int i = 0; i < 3; i++){
+				int motionCount = 0;
+				int dataCount = 0;
+				for(int f = 0; f < 3; f++)	tracjectory.at(motionCount).motion[NUM_JOINT + f] = FinPos[i][f];
+				arm.SetGoalPosition(tracjectory.at(motionCount).motion);
+				while(1){
+					cv::Mat kinectImg = kinectManager.getImg();
+					cv::Mat KinectDepth = kinectManager.getDepth();
+					cv::Mat kinectPC = kinectManager.getPointCloud();
+
+					cv::imshow("kinectImg", kinectImg);
+					char key = cv::waitKey(10);
+
+					int presAngle[9];
+					arm.GetPresPosition(presAngle);
+					int maxsub = calcMaxSubAng(tracjectory.at(motionCount).motion, presAngle);
+					if(maxsub < 40 && (motionCount == tracjectory.size()-1))				//끝내는 조건
+						break;
+					if(maxsub < 40){
+						for(int f = 0; f < 3; f++)	tracjectory.at(motionCount+1).motion[NUM_JOINT + f] = FinPos[i][f];
+						arm.SetGoalPosition(tracjectory.at(++motionCount).motion);
+					}else{
+						if(writeData(kinectImg, KinectDepth, kinectPC, &tracker, presAngle, ccFileName, dataCount, backRGB, backDepth)){
+							printf("[%d] data saved\n", dataCount);
+							dataCount++;
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -231,4 +273,91 @@ void writeDepthData(cv::Mat src, char* path, char* name){
 	fwrite(&Type, sizeof(int), 1, fp);
 	for(int i = 0; i < src.rows * src.cols; i++)		fwrite(&src.at<float>(i), sizeof(float), 1, fp);
 	fclose(fp);
+}
+
+int calcMaxSubAng(int *target, int *pres){
+	int max = -1;
+	for(int i = 0; i < NUM_JOINT; i++){
+		int sub = abs(target[i] - pres[i]);
+		if(max < sub)	max = sub;
+	}
+
+	return max;
+}
+
+bool writeData(cv::Mat RGBimg, cv::Mat DEPTHimg, cv::Mat pointCloud, ColorBasedTracker *cbTracker, int* angle, char* path, const int count, cv::Mat backRGB, cv::Mat backDepth){
+	cv::Mat processImg = cbTracker->calcImage(RGBimg, DEPTHimg);
+	if(processImg.rows == 0)	return false;
+	if(RGBimg.channels() == 4)	cv::cvtColor(RGBimg, RGBimg, CV_BGRA2BGR);
+	if(backRGB.channels() == 4)	cv::cvtColor(backRGB, backRGB, CV_BGRA2BGR);
+
+	char pathBuf[256], buf[256], id[256];
+	sprintf(pathBuf, "%s\\%s", DEFAULT_WRITE_PATH, path);
+	itoa(count, id, 10);
+
+	//store RGB
+	sprintf(buf, "%s\\RGB\\%d.bmp", pathBuf, count);
+	cv::imwrite(buf, RGBimg);
+	//store Depth
+	sprintf(buf, "%s\\DEPTHMAP", pathBuf);
+	writeDepthData(DEPTHimg, buf, id);
+	//store Angle
+	sprintf(buf, "%s\\ANGLE\\%d.txt", pathBuf, count);
+	FILE *fp = fopen(buf, "w");
+	for(int i = 0; i < NUM_XEL; i++)	fprintf(fp, "%d\n", angle[i]);
+	fclose(fp);
+	//store Process Img
+	sprintf(buf, "%s\\PROCESSIMG\\%d.bmp", pathBuf, count);
+	cv::imwrite(buf, processImg);
+	cv::imshow("Process Img", processImg);
+	cv::waitKey(1);
+	//store point cloud
+	sprintf(buf, "%s\\XYZMAP\\%d.bin", pathBuf, count);
+	fp = fopen(buf, "wb");
+	fwrite(&pointCloud.rows, sizeof(int), 1, fp);
+	fwrite(&pointCloud.cols, sizeof(int), 1, fp);
+	int Type = pointCloud.type();
+	fwrite(&Type, sizeof(int), 1, fp);
+	for(int i = 0; i < pointCloud.rows * pointCloud.cols; i++)
+		for(int c = 0; c < pointCloud.channels(); c++)
+			fwrite(&pointCloud.at<cv::Vec3f>(i)[c], sizeof(float), 1, fp);
+	fclose(fp);
+
+	//store ProcDepth
+	//Depth process
+	cv::Point2i leftUpper = cv::Point2i(9999, 9999);
+	cv::Point2i rightBot = cv::Point2i(-1, -1);
+	for(int h = 0; h < backRGB.rows; h++){
+		for(int w = 0; w < backRGB.cols; w++){
+			cv::Vec3b subVal;
+			for(int c = 0; c < backRGB.channels(); c++){
+				subVal[c] = abs(backRGB.at<cv::Vec3b>(h,w)[c] - processImg.at<cv::Vec3b>(h,w)[c]);
+			}
+
+			if(subVal[0] != 0 && subVal[1] != 0 && subVal[2] != 0){
+				if(h < leftUpper.y)		leftUpper.y = h;
+				if(h > rightBot.y)		rightBot.y = h;
+				if(w < leftUpper.x)		leftUpper.x = w;
+				if(w > rightBot.x)		rightBot.x = w;
+			}
+		}
+	}
+	cv::Mat ProcDepthMap(DEPTHimg.rows, DEPTHimg.cols, DEPTHimg.type());
+	float max = -1, min = 999999;
+	ProcDepthMap = backDepth.clone();
+	for(int h = 0; h < DEPTHimg.rows; h++){
+		for(int w = 0; w < DEPTHimg.cols; w++){
+			if(leftUpper.y-PEDDING <= h && h <= rightBot.y+PEDDING){
+				if(leftUpper.x-PEDDING <= w && w <= rightBot.x+PEDDING){
+					ProcDepthMap.at<float>(h,w) = DEPTHimg.at<float>(h,w);
+				}
+			}
+			if(max < ProcDepthMap.at<float>(h,w))	max  = ProcDepthMap.at<float>(h,w);
+			if(min > ProcDepthMap.at<float>(h,w))	min = ProcDepthMap.at<float>(h,w);
+		}
+	}
+	sprintf(buf, "%s\\PROCDEPTH", pathBuf);
+	writeDepthData(ProcDepthMap, buf, id);
+
+	return true;
 }
