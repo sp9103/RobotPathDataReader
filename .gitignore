@@ -1,0 +1,9 @@
+*.tlog
+*.opensdf
+*.sdf
+*.idb
+*.txt
+*.bin
+*.bmp
+*.lastbuildstate
+*.unsuccessfulbuild
