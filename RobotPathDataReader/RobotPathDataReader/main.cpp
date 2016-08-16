@@ -20,6 +20,10 @@
 #define DEFAULT_WRITE_PATH "data"
 #define DEFAULT_READ_PATH "D:\\Users\\sp\\Documents\\RobotPathDataRecorder\\RobotPathDataRecorder\\RobotPathDataRecorder\\data"
 
+typedef struct robotMotion_{
+	int motion[9];
+}robotMotion;
+
 void ControllerInit(RobotArm *robot);
 bool robotConnectCheck(RobotArm *robot, armsdk::RobotInfo *robotinfo, armsdk::Kinematics *kin);
 void CreateRGBDdir(const char* className);
@@ -69,6 +73,8 @@ int main(){
 			//시작부
 			ColorBasedTracker tracker;
 			CreateRGBDdir(ccFileName);
+			std::vector<robotMotion> tracjectory;
+
 			//background store
 			arm.safeReleasePose();
 			cv::Mat backRGB = kinectManager.getImg();
@@ -84,6 +90,28 @@ int main(){
 			tracker.InsertBackGround(backRGB, backDepth);
 
 			//경로 읽어들이기
+			WIN32_FIND_DATA class_ffd;
+			TCHAR szProcDir[MAX_PATH] = { 0, };
+			HANDLE hDataFind = INVALID_HANDLE_VALUE;
+			char procDir[256];
+			strcpy(procDir, tBuf);
+			strcat(procDir, "\\ANGLE\\*");
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, procDir, strlen(procDir), szProcDir, MAX_PATH);
+			hDataFind = FindFirstFile(szProcDir, &class_ffd);
+			float dist = -99999;
+			while (FindNextFile(hDataFind, &class_ffd) != 0){
+				//1. trajectory load
+				char AngFileName[256];
+				size_t Anglen;
+				StringCchLength(class_ffd.cFileName, MAX_PATH, &Anglen);
+				WideCharToMultiByte(CP_ACP, 0, class_ffd.cFileName, 256, AngFileName, 256, NULL, NULL);
+				if (AngFileName[0] == '.')
+					continue;
+				FILE *fp = fopen(AngFileName, "r");
+				int Angle[NUM_XEL];
+				if (fp == NULL)		continue;
+				//for(int i = 0; i < NUM_XEL; i++)
+			}
 		}
 	}
 
