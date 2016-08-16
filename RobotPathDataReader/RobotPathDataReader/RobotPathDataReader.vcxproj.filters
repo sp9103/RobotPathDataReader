@@ -13,5 +13,69 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Kinect">
+      <UniqueIdentifier>{02891d84-69a4-496c-a194-c3801657bb21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ColorBasedTracker">
+      <UniqueIdentifier>{2e41185e-63b1-4c3c-b3b0-749a82a85be1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Robot">
+      <UniqueIdentifier>{e84fa742-667b-4415-8bf2-6d147757cf7c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Robot\DynamixelPro.cpp">
+      <Filter>Robot</Filter>
+    </ClCompile>
+    <ClCompile Include="Robot\MX_controller.cpp">
+      <Filter>Robot</Filter>
+    </ClCompile>
+    <ClCompile Include="Robot\RobotArm.cpp">
+      <Filter>Robot</Filter>
+    </ClCompile>
+    <ClCompile Include="KinectConnecter.cpp">
+      <Filter>Kinect</Filter>
+    </ClCompile>
+    <ClCompile Include="KinectMangerThread.cpp">
+      <Filter>Kinect</Filter>
+    </ClCompile>
+    <ClCompile Include="BlobLabeling.cpp">
+      <Filter>ColorBasedTracker</Filter>
+    </ClCompile>
+    <ClCompile Include="ColorBasedTracker.cpp">
+      <Filter>ColorBasedTracker</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Robot\dynamixel.h">
+      <Filter>Robot</Filter>
+    </ClInclude>
+    <ClInclude Include="Robot\DynamixelPro.h">
+      <Filter>Robot</Filter>
+    </ClInclude>
+    <ClInclude Include="Robot\MX_controller.h">
+      <Filter>Robot</Filter>
+    </ClInclude>
+    <ClInclude Include="Robot\RobotArm.h">
+      <Filter>Robot</Filter>
+    </ClInclude>
+    <ClInclude Include="KinectMangerThread.h">
+      <Filter>Kinect</Filter>
+    </ClInclude>
+    <ClInclude Include="KinectConnecter.h">
+      <Filter>Kinect</Filter>
+    </ClInclude>
+    <ClInclude Include="ColorBasedTracker.h">
+      <Filter>ColorBasedTracker</Filter>
+    </ClInclude>
+    <ClInclude Include="BlobLabeling.h">
+      <Filter>ColorBasedTracker</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

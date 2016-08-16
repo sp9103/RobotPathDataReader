@@ -10,6 +10,27 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BlobLabeling.cpp" />
+    <ClCompile Include="ColorBasedTracker.cpp" />
+    <ClCompile Include="KinectConnecter.cpp" />
+    <ClCompile Include="KinectMangerThread.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Robot\DynamixelPro.cpp" />
+    <ClCompile Include="Robot\MX_controller.cpp" />
+    <ClCompile Include="Robot\RobotArm.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BlobLabeling.h" />
+    <ClInclude Include="ColorBasedTracker.h" />
+    <ClInclude Include="KinectConnecter.h" />
+    <ClInclude Include="KinectMangerThread.h" />
+    <ClInclude Include="Robot\dynamixel.h" />
+    <ClInclude Include="Robot\DynamixelPro.h" />
+    <ClInclude Include="Robot\MX_controller.h" />
+    <ClInclude Include="Robot\RobotArm.h" />
+    <ClInclude Include="stdafx.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B858C478-DA12-47AB-A507-3994F9FDD38E}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -21,6 +42,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v110</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -41,6 +63,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\Program Files\Microsoft SDKs\Kinect\v2.0_1409\inc;D:\opencv\build\include;$(ProjectDir)eigen;$(ProjectDir)ARMSDK\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files\Microsoft SDKs\Kinect\v2.0_1409\Lib\x86;D:\opencv\build\x86\vc11\lib;$(SolutionDir)lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -56,6 +80,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>Kinect20.lib;opencv_core2410d.lib;opencv_highgui2410d.lib;opencv_imgproc2410d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -75,8 +100,6 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
