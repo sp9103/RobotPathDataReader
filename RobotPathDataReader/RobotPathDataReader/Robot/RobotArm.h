@@ -1,6 +1,7 @@
 #pragma once
 #include <stdio.h>
 #include <Eigen\Dense>
+#include <Windows.h>
 
 #include "dynamixel.h"
 #include "MX_controller.h"
@@ -35,6 +36,8 @@ public:
 	int SetLED(bool onoff);
 	int SetFingerPosition(int *GoalPosition);
 
+	void safeReleasePose();
+
 	//ARMSDK function
 	int Arm_Get_JointValue(Eigen::VectorXi *value);
 	SerialPort* DXL_Get_Port(void);
@@ -52,5 +55,7 @@ private:
 #ifdef USING_FINGER
 	MX_controller fingercontroller_;
 #endif
+
+	bool waitMove();
 };
 

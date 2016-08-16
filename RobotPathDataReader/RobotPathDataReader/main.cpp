@@ -62,6 +62,7 @@ int main(){
 		printf("directory : %s load.\n", ccFileName);
 		if (ccFileName[0] != '.'){
 			//Ω√¿€∫Œ
+			//background store
 		}
 	}
 
