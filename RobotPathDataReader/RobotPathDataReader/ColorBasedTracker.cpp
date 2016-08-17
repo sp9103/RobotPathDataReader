@@ -178,6 +178,7 @@ cv::Mat ColorBasedTracker::DeleteSub(cv::Mat map, cv::Mat src){
 				output.at<uchar>(h,w) = (uchar)255;
 		}
 	}
+	cv::dilate(output, output, cv::Mat(), cv::Point(-1, -1), 1);
 
 	return output;
 }
@@ -248,8 +249,6 @@ cv::Rect ColorBasedTracker::FindHandBlob(std::vector<std::pair<std::vector<cv::P
 		}
 
 		if(nonBoundBlobIdx.size() == 1)		return src.at(nonBoundBlobIdx.at(0)).second;
-		else
-			return src.at(maxIdx).second;
 	}
 
 	return outRect;

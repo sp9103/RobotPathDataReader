@@ -166,9 +166,9 @@ int main(){
 			//±¸µ¿ºÎ
 			arm.safeMovePose(tracjectory.at(0).motion);
 			vector<robotMotion> tempVec;
+			int dataCount = 0;
 			for(int i = 0; i < 3; i++){
 				int motionCount = 0;
-				int dataCount = 0;
 				for(int f = 0; f < 3; f++)	tracjectory.at(motionCount).motion[NUM_JOINT + f] = FinPos[i][f];
 				arm.SetGoalPosition(tracjectory.at(motionCount).motion);
 				tempVec.push_back(tracjectory.at(motionCount));
